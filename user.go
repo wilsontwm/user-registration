@@ -28,11 +28,44 @@ type User struct {
 	ActivationCode         *string
 	ResetPasswordCode      *string
 	ResetPasswordExpiredAt *time.Time
+	Token                  string `gorm:"-"`
 }
 
 // Setting the table name
 func (User) TableName() string {
 	return tableName
+}
+
+// Login of the user
+func Login(input *User) (*User, error) {
+	db := getDB()
+	defer db.Close()
+	user := &User{}
+	db.Table(tableName).Where("email = ?", input.Email).First(user)
+
+	if user == nil {
+		return nil, fmt.Errorf("Invalid email or password.")
+	} else if user.ActivationCode != nil {
+		return nil, fmt.Errorf("User account is not activated.")
+	}
+
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password))
+
+	// If password does not match
+	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
+		return nil, fmt.Errorf("Invalid email or password.")
+	} else if err != nil {
+		return nil, fmt.Errorf(err.Error())
+	}
+
+	// Create new JWT token for the newly registered account
+	expiry := time.Now().Add(time.Hour * 2) // Only valid for 2 hours
+	tk := &Token{UserID: user.ID, Expiry: expiry}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, tk)
+	tokenString, _ := token.SignedString([]byte(jwtKey))
+	user.Token = tokenString
+
+	return user, nil
 }
 
 // Sign up of the user

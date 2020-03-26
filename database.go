@@ -32,6 +32,7 @@ var dbDriver string
 var dbUri string
 var tableName = "users"
 var isUserActivationRequired = true
+var jwtKey = "jwtKey"
 
 // Setup the configuration to the DB connection
 func Initialize(dbConfig DBConfig) {
@@ -70,6 +71,13 @@ func TableName(name string) func() {
 func UserActivation(on bool) func() {
 	return func() {
 		isUserActivationRequired = on
+	}
+}
+
+// Configuration: Set the flag of user activation
+func JWTSetKey(key string) func() {
+	return func() {
+		jwtKey = key
 	}
 }
 

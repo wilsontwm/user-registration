@@ -43,6 +43,22 @@ func TestSignup(t *testing.T) {
 		t.Error("User 1 activation code is not set.")
 	}
 
+	input = &User{
+		Email:    "test99@gmail.com",
+		Name:     "test99",
+		Password: "password",
+	}
+
+	user, err = Signup(input)
+
+	if err != nil {
+		t.Error(err)
+	} else if user.ID == uuid.Nil {
+		t.Error("User 99 ID is empty, user is not created.")
+	} else if user.ActivationCode == nil {
+		t.Error("User 99 activation code is not set.")
+	}
+
 	Config(UserActivation(false))
 
 	input = &User{
@@ -109,7 +125,7 @@ func TestActivateAccount(t *testing.T) {
 
 	// Randomly get an user with activation code
 	temp := &User{}
-	db.Where("activation_code <> ?", "").First(temp)
+	db.Where("activation_code <> ?", "").Where("email = ?", "test@gmail.com").First(temp)
 
 	if temp == nil {
 		t.Error("User with activation code cannot be found.")
@@ -150,5 +166,45 @@ func TestResetPassword(t *testing.T) {
 		t.Error(err)
 	} else if user.ResetPasswordCode != nil {
 		t.Error("User reset password code is still active.")
+	}
+}
+
+// Test logging in the user
+func TestLogin(t *testing.T) {
+	initialize()
+	input := &User{
+		Email:    "test@gmail.com",
+		Password: "password",
+	}
+
+	user, err := Login(input)
+	if err != nil {
+		t.Error(err)
+	} else if user == nil {
+		t.Error("User login fails.")
+	} else if user.Token == "" {
+		t.Error("JWT Token is not set.")
+	}
+
+	input = &User{
+		Email:    "test@gmail.com",
+		Password: "wrongpassword",
+	}
+
+	user, err = Login(input)
+
+	if err == nil {
+		t.Error("Invalid login with incorrect password.")
+	}
+
+	input = &User{
+		Email:    "test99@gmail.com",
+		Password: "password",
+	}
+
+	user, err = Login(input)
+
+	if err == nil {
+		t.Error("Invalid login to inactive user account.")
 	}
 }

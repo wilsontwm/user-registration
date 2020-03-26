@@ -34,10 +34,15 @@ func TestConnectMysqlDatabase(t *testing.T) {
 	}
 
 	Initialize(dbConfig)
+
+	db := getDB()
+	defer db.Close()
+
+	db.DropTableIfExists(tableName)
+
 	Config(TableName(tableName), MigrateDatabase())
 
 	var ret []string
-	db := getDB()
 	err := db.Raw("show tables").Pluck("Tables_in_mysql", &ret).Error
 
 	if err != nil {
@@ -63,10 +68,15 @@ func TestConnectPostgresDatabase(t *testing.T) {
 	}
 
 	Initialize(dbConfig)
+
+	db := getDB()
+	defer db.Close()
+
+	db.DropTableIfExists(tableName)
+
 	Config(TableName(tableName), MigrateDatabase())
 
 	var ret []string
-	db := getDB()
 	err := db.Raw("SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema = 'public' ORDER BY table_type, table_name").Pluck("table_name", &ret).Error
 
 	if err != nil {

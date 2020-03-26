@@ -83,7 +83,7 @@ func migrateDatabase() {
 	db := getDB()
 	defer db.Close()
 
-	db.Debug().CreateTable(&User{})
+	db.CreateTable(&User{})
 }
 
 // Get the connection to the DB

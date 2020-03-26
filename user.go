@@ -36,10 +36,10 @@ func (User) TableName() string {
 }
 
 // Sign up of the user
-func (user *User) Signup() error {
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	user.Password = string(hashedPassword)
-
+func Signup(input *User) (*User, error) {
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	input.Password = string(hashedPassword)
+	user := input
 	db := getDB()
 	defer db.Close()
 
@@ -47,44 +47,31 @@ func (user *User) Signup() error {
 	db.Create(user)
 
 	if user.ID == uuid.Nil {
-		return fmt.Errorf("User is not created.")
+		return nil, fmt.Errorf("User is not created.")
 	}
 
 	// Store the activation code to the user
-	hash := md5.New()
-	hash.Write([]byte(fmt.Sprint(user.ID)))
-	activationCode := hex.EncodeToString(hash.Sum(nil))
+	if isUserActivationRequired {
+		hash := md5.New()
+		hash.Write([]byte(fmt.Sprint(user.ID)))
+		activationCode := hex.EncodeToString(hash.Sum(nil))
 
-	db.Model(&user).Update("ActivationCode", activationCode)
+		db.Model(&user).Update("ActivationCode", activationCode)
+	}
 
 	user.Password = "" // delete the password
 
-	return nil
-}
-
-// Resend the activation code to the user
-func (user *User) ResendActivation() error {
-	user = getUserByEmail(user.Email)
-
-	if user == nil {
-		return fmt.Errorf("Invalid email address.")
-	} else if user.ActivationCode == nil {
-		return fmt.Errorf("User has already been activated.")
-	}
-
-	// TODO: Send email to resend activation code
-
-	return nil
+	return user, nil
 }
 
 // Set forgotten password code
-func (user *User) ForgetPassword() error {
-	user = getUserByEmail(user.Email)
+func ForgetPassword(input *User) (*User, error) {
+	user := getUserByEmail(input.Email)
 
 	if user == nil {
-		return fmt.Errorf("Invalid email address.")
+		return nil, fmt.Errorf("Invalid email address.")
 	} else if user.ActivationCode != nil {
-		return fmt.Errorf("Please activate your account first.")
+		return nil, fmt.Errorf("Please activate your account first.")
 	}
 
 	// Store the reset password code to the user
@@ -102,15 +89,15 @@ func (user *User) ForgetPassword() error {
 		"ResetPasswordExpiredAt": resetPasswordExpiredAt,
 	})
 
-	return nil
+	return user, nil
 }
 
 // Activate user account
-func (user *User) ActivateAccount() error {
-	user = getUserByActivationCode(*user.ActivationCode)
+func ActivateAccount(input *User) (*User, error) {
+	user := getUserByActivationCode(*input.ActivationCode)
 
 	if user == nil {
-		return fmt.Errorf("Invalid activation link.")
+		return nil, fmt.Errorf("Invalid activation link.")
 	}
 
 	db := getDB()
@@ -118,19 +105,19 @@ func (user *User) ActivateAccount() error {
 
 	db.Model(&user).Update("ActivationCode", nil)
 
-	return nil
+	return user, nil
 }
 
 // Reset user password
-func (user *User) ResetPassword() error {
-	user = getUserByResetPasswordCode(*user.ResetPasswordCode)
+func ResetPassword(input *User) (*User, error) {
+	user := getUserByResetPasswordCode(*input.ResetPasswordCode)
 
 	if user == nil {
-		return fmt.Errorf("Invalid reset password link.")
+		return nil, fmt.Errorf("Invalid reset password link.")
 	}
 
 	// Reset the password of the user
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	db := getDB()
 	defer db.Close()
 
@@ -140,7 +127,7 @@ func (user *User) ResetPassword() error {
 		"Password":               string(hashedPassword),
 	})
 
-	return nil
+	return user, nil
 }
 
 // Post processing of the user

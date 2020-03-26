@@ -16,6 +16,8 @@ const (
 
 type Token struct {
 	UserID uuid.UUID
+	Name   string
+	Email  string
 	Expiry time.Time
 	jwt.StandardClaims
 }
@@ -60,7 +62,12 @@ func Login(input *User) (*User, error) {
 
 	// Create new JWT token for the newly registered account
 	expiry := time.Now().Add(time.Hour * 2) // Only valid for 2 hours
-	tk := &Token{UserID: user.ID, Expiry: expiry}
+	tk := &Token{
+		UserID: user.ID,
+		Name:   user.Name,
+		Email:  user.Email,
+		Expiry: expiry,
+	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, tk)
 	tokenString, _ := token.SignedString([]byte(jwtKey))
 	user.Token = tokenString
@@ -161,6 +168,28 @@ func ResetPassword(input *User) (*User, error) {
 	})
 
 	return user, nil
+}
+
+// Authenticate the user by token
+func Authenticate(jwtToken string) (*Token, error) {
+	tk := &Token{}
+	token, err := jwt.ParseWithClaims(jwtToken, tk, func(token *jwt.Token) (interface{}, error) {
+		return []byte(jwtKey), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, fmt.Errorf("Token is not valid.")
+	}
+
+	if time.Now().After(tk.Expiry) {
+		return nil, fmt.Errorf("Token has expired. Please login again.")
+	}
+
+	return tk, nil
 }
 
 // Post processing of the user

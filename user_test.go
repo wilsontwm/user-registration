@@ -2,6 +2,7 @@ package user
 
 import (
 	"github.com/satori/go.uuid"
+	"strings"
 	"testing"
 )
 
@@ -206,5 +207,41 @@ func TestLogin(t *testing.T) {
 
 	if err == nil {
 		t.Error("Invalid login to inactive user account.")
+	}
+}
+
+// Test authenticate the user
+func TestAuthenticate(t *testing.T) {
+	initialize()
+	input := &User{
+		Email:    "test@gmail.com",
+		Password: "password",
+	}
+
+	user, err := Login(input)
+	if err != nil {
+		t.Error(err)
+	} else if user == nil {
+		t.Error("User login fails.")
+	}
+
+	token := user.Token
+
+	authenticatedToken, err := Authenticate(token)
+
+	if err != nil {
+		t.Error(err)
+	} else if user.ID != authenticatedToken.UserID {
+		t.Error("Invalid authenticated user ID.")
+	}
+
+	// Authenticate with incorrect token
+	token = token[:len(token)-5]
+	values := []string{token, "test"}
+	token = strings.Join(values, "")
+	authenticatedToken, err = Authenticate(token)
+
+	if err == nil {
+		t.Error("Invalid successful authentication of user.")
 	}
 }

@@ -1,4 +1,4 @@
-package user
+package userreg
 
 import (
 	"crypto/md5"

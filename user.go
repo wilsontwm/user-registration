@@ -83,6 +83,11 @@ func Signup(input *User) (*User, error) {
 	db := getDB()
 	defer db.Close()
 
+	temp := getUserByEmail(input.Email)
+	if temp != nil {
+		return nil, fmt.Errorf("Email has already been taken.")
+	}
+
 	// Create the user
 	db.Create(user)
 

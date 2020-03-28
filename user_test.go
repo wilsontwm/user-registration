@@ -45,6 +45,18 @@ func TestSignup(t *testing.T) {
 	}
 
 	input = &User{
+		Email:    "test@gmail.com",
+		Name:     "test 2",
+		Password: "password",
+	}
+
+	user, err = Signup(input)
+
+	if err == nil {
+		t.Error("User with same email has been created.")
+	}
+
+	input = &User{
 		Email:    "test99@gmail.com",
 		Name:     "test99",
 		Password: "password",

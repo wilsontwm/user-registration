@@ -45,7 +45,7 @@ func Login(input *User) (*User, error) {
 	user := &User{}
 	db.Table(tableName).Where("email = ?", input.Email).First(user)
 
-	if user == nil {
+	if user.ID == uuid.Nil {
 		return nil, fmt.Errorf("Invalid email or password.")
 	} else if user.ActivationCode != nil {
 		return nil, fmt.Errorf("User account is not activated.")

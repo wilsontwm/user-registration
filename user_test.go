@@ -211,6 +211,17 @@ func TestLogin(t *testing.T) {
 	}
 
 	input = &User{
+		Email:    "wrongemail@gmail.com",
+		Password: "wrongpassword",
+	}
+
+	user, err = Login(input)
+
+	if err == nil {
+		t.Error("Invalid login with incorrect password.")
+	}
+
+	input = &User{
 		Email:    "test99@gmail.com",
 		Password: "password",
 	}

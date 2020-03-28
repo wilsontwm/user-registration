@@ -159,7 +159,7 @@ func TestResetPassword(t *testing.T) {
 	db := getDB()
 	defer db.Close()
 
-	// Randomly get an user with activation code
+	// Randomly get an user with reset password code
 	temp := &User{}
 	db.Where("reset_password_code <> ?", "").First(temp)
 
@@ -179,6 +179,53 @@ func TestResetPassword(t *testing.T) {
 		t.Error(err)
 	} else if user.ResetPasswordCode != nil {
 		t.Error("User reset password code is still active.")
+	}
+}
+
+// Test get activation code
+func TestGetActivationCode(t *testing.T) {
+	initialize()
+	db := getDB()
+	defer db.Close()
+
+	// Randomly get an user with activation code
+	temp := &User{}
+	db.Where("activation_code <> ?", "").First(temp)
+
+	if temp == nil {
+		t.Error("User with activation code cannot be found.")
+		return
+	}
+
+	input := &User{
+		Email: temp.Email,
+	}
+
+	user, err := GetActivationCode(input)
+
+	if err != nil {
+		t.Error(err)
+	} else if user.ActivationCode == nil {
+		t.Error("User activation code is not retrieved.")
+	}
+
+	// Randomly get an user without activation code
+	temp = &User{}
+	db.Where("activation_code = ?", nil).First(temp)
+
+	if temp == nil {
+		t.Error("User with activation code cannot be found.")
+		return
+	}
+
+	input = &User{
+		Email: temp.Email,
+	}
+
+	user, err = GetActivationCode(input)
+
+	if err == nil {
+		t.Error("User has already been activated and error should be prompted.")
 	}
 }
 

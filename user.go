@@ -72,7 +72,7 @@ func Login(input *User) (*User, error) {
 	tokenString, _ := token.SignedString([]byte(jwtKey))
 	user.Token = tokenString
 	user.Password = ""
-	
+
 	return user, nil
 }
 
@@ -172,6 +172,19 @@ func ResetPassword(input *User) (*User, error) {
 		"ResetPasswordExpiredAt": nil,
 		"Password":               string(hashedPassword),
 	})
+
+	return user, nil
+}
+
+// Get user activation code by email
+func GetActivationCode(input *User) (*User, error) {
+	user := getUserByEmail(input.Email)
+
+	if user == nil {
+		return nil, fmt.Errorf("Invalid email.")
+	} else if user.ActivationCode == nil {
+		return nil, fmt.Errorf("User has already been activated.")
+	}
 
 	return user, nil
 }

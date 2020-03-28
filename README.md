@@ -15,8 +15,21 @@ The user-registration module is a module that uses Golang on user registration a
 ## Example
 
 1. Database setup
+```go
+dbConfig := userreg.DBConfig{
+  Driver:   os.Getenv("db_type"),
+  Username: os.Getenv("db_user"),
+  Password: os.Getenv("db_pass"),
+  Host:     os.Getenv("db_host"),
+  DBName:   os.Getenv("db_name"),
+}
 
-- User registration
+tableName := "tests"
+userreg.Initialize(dbConfig)
+userreg.Config(userreg.TableName(tableName))
+```
+
+2. User registration
 ```go
 in := &userreg.User{}
 in.Name = input.Name
@@ -25,6 +38,38 @@ in.Password = input.Password
 
 // Signup the account
 user, err := userreg.Signup(in)
+```
+
+3. User login
+```go
+in := &userreg.User{}
+in.Email = input.Email
+in.Password = input.Password
+
+// Login the account
+user, err := userreg.Login(in)
+```
+
+4. User forget password
+```go
+in := &userreg.User{}
+in.Email = input.Email
+user, err := userreg.ForgetPassword(in)
+```
+
+5. User reset password
+```go
+in := &userreg.User{}
+in.ResetPasswordCode = &input.ResetPasswordCode
+in.Password = input.Password
+user, err := userreg.ResetPassword(in)
+```
+
+6. User activate account
+```go
+in := &userreg.User{}
+in.ActivationCode = &input.ActivationCode
+user, err := userreg.ActivateAccount(in)
 ```
 
 ## License

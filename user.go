@@ -71,7 +71,8 @@ func Login(input *User) (*User, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, tk)
 	tokenString, _ := token.SignedString([]byte(jwtKey))
 	user.Token = tokenString
-
+	user.Password = ""
+	
 	return user, nil
 }
 

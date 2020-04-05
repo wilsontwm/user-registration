@@ -18,13 +18,14 @@ const (
 
 // The configuration for the database connection
 type DBConfig struct {
-	Driver   string
-	Username string
-	Password string
-	Host     string
-	Port     string
-	DBName   string
-	Path     string
+	Driver                 string
+	Username               string
+	Password               string
+	Host                   string
+	Port                   string
+	DBName                 string
+	Path                   string
+	InstanceConnectionName string
 }
 
 var db *gorm.DB
@@ -39,7 +40,7 @@ func Initialize(dbConfig DBConfig) {
 	dbDriver = dbConfig.Driver
 	switch dbDriver {
 	case Mysql:
-		dbUri = fmt.Sprintf("%s:%s@tcp(%s)/%s", dbConfig.Username, dbConfig.Password, dbConfig.Host, dbConfig.DBName)
+		dbUri = fmt.Sprintf("%s:%s@unix(/cloudsql/%s)/%s", dbConfig.Username, dbConfig.Password, dbConfig.InstanceConnectionName, dbConfig.DBName)
 		//dbUri = fmt.Sprintf("%v:%v@(%v)/%v?charset=utf8&parseTime=True&loc=Local", dbConfig.Username, dbConfig.Password, dbConfig.Host, dbConfig.DBName)
 	case Postgres:
 		dbUri = fmt.Sprintf("host=%v port=%v user=%v dbname=%v password=%v sslmode=disable", dbConfig.Host, dbConfig.Port, dbConfig.Username, dbConfig.DBName, dbConfig.Password)
